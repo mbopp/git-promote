@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# Usage: git-promote <branch>
+#
+# Promote to <branch> (which must be review or production).  
+# You can also promote master directly to production, though it will still flow through staging.
+#
+# Code flows from dev(develop) => review(test) => production(master).
+
+TARGET="$1"
+BRANCH=$(git name-rev HEAD | cut -d' ' -f2)
+
+# USAGE
+if [ -z "$1" ]; then
+  echo "PROMOTION TOOL ($(basename $0))\nUSAGE:\t$(basename $0) [target]\t\tWhere target is 'review' or 'production' (no single quotes)" 1>&2
+  exit 1
+fi
+
+# VALIDATION
+if [ "$TARGET" != "review" -a "$TARGET" != "test" -a "$TARGET" != "master" -a "$TARGET" != "production" ]; then
+  echo "PROMOTE($(basename $0)): you must promote to either review (test) or master (production)" 1>&2
+  exit 1
+fi
+
+# Set appropriate SOURCE and TARGET based on what was provided as the TARGET (needed for using on other systems like GFS Canada)
+
+for branch in $(basename $(git for-each-ref --format='%(refname)' refs/heads/)); do
+  [ "$branch" = "dev" -o "$branch" = "develop" ] && DEV="$branch"
+  [ "$branch" = "test" -o "$branch" = "review" ] && REVIEW="$branch"
+  [ "$branch" = "master" -o "$branch" = "production" ] && PROD="$branch"
+done
+
+case "$TARGET" in
+  test)    
+    TARGET="$REVIEW"
+    SOURCE="$DEV"
+    ;;
+  review)
+    TARGET="$REVIEW"
+    SOURCE="$DEV"
+    ;;
+  production)
+    TARGET="$PROD"
+    SOURCE="$REVIEW"
+    ;;
+  master)
+    TARGET="$PROD"
+    SOURCE="$REVIEW"
+    ;;
+  *)
+    echo "Invalid environment $TARGET"
+    exit 1
+    ;;
+esac   
+
+echo "Promoting from $SOURCE to $TARGET"
+
+# UTILITY FUNCTION
+# target, from
+function checkout_and_merge() {
+  git checkout -q "$1" || {
+    echo "RDG PROMOTE($(basename $0)): could not check out target cleanly." 1>&2
+    exit 1
+  }
+  git merge --no-ff "$2" -m "Promoting code to $TARGET"
+}
+
+# Check the environment we are trying to promote to
+if [ "$TARGET" = "production" -o "$TARGET" = "master" ]; then
+  while true; do
+      read -p "Are you sure you want to promote the review branch to PRODUCTION?[yN]" yn
+      case $yn in
+          [Yy]* ) checkout_and_merge "$TARGET" "$SOURCE";break;;
+          [Nn]* ) echo "**Quitting due to lack of confidence";exit;;
+          * ) echo "**Quitting due to indecision";exit;;
+      esac
+  done  
+else
+  checkout_and_merge "$TARGET" "$SOURCE"
+fi
+
+git push
+
+# return to our initial branch
+git checkout -q "$BRANCH"
+
+echo "Promotion Complete! To complete promotion and check code out use whiskey_disk: wd deploy --to=<environment>"

@@ -58,7 +58,7 @@ echo "Promoting from $SOURCE to $TARGET"
 # UTILITY FUNCTION
 # target, from
 function checkout_and_merge() {
-  git checkout -q "$1" || {
+  git checkout -q -f "$1" || {
     echo "RDG PROMOTE($(basename $0)): could not check out target cleanly." 1>&2
     exit 1
   }
@@ -82,6 +82,6 @@ fi
 git push
 
 # return to our initial branch
-git checkout -q "$BRANCH"
+git checkout -q -f "$BRANCH"
 
 echo "Promotion Complete! To complete promotion and check code out use whiskey_disk: wd deploy --to=<environment>"

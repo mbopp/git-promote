@@ -31,19 +31,11 @@ for branch in $(basename $(git for-each-ref --format='%(refname)' refs/heads/));
 done
 
 case "$TARGET" in
-  test)    
+  review|test)
     TARGET="$REVIEW"
     SOURCE="$DEV"
     ;;
-  review)
-    TARGET="$REVIEW"
-    SOURCE="$DEV"
-    ;;
-  production)
-    TARGET="$PROD"
-    SOURCE="$REVIEW"
-    ;;
-  master)
+  production|master)
     TARGET="$PROD"
     SOURCE="$REVIEW"
     ;;

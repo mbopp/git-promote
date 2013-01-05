@@ -60,7 +60,7 @@ function checkout_and_merge() {
 # Check the environment we are trying to promote to
 if [ "$TARGET" = "production" -o "$TARGET" = "master" ]; then
   while true; do
-      read -p "Are you sure you want to promote the review branch to PRODUCTION?[yN]" yn
+      read -p "Are you sure you want to promote the review branch to PRODUCTION? (y/n): " yn
       case $yn in
           [Yy]* ) checkout_and_merge "$TARGET" "$SOURCE";break;;
           [Nn]* ) echo "**Quitting due to lack of confidence";exit;;

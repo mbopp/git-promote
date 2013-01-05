@@ -76,4 +76,4 @@ git push
 # return to our initial branch
 git checkout -q -f "$BRANCH"
 
-echo "Promotion Complete! To complete promotion and check code out use whiskey_disk: wd deploy --to=<environment>"
+echo "Promotion Complete! The post push services set up on BitBucket.org will handle pusing the code to the server."

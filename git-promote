@@ -77,3 +77,4 @@ git push
 git checkout -q -f "$BRANCH"
 
 echo "Promotion Complete! The post push services set up on BitBucket.org will handle pusing the code to the server."
+echo "*** You can view the results of this post in the projects section of the RDG intranet."

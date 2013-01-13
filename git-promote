@@ -12,7 +12,8 @@ BRANCH=$(git name-rev HEAD | cut -d' ' -f2)
 
 # USAGE
 if [ -z "$1" ]; then
-  echo "PROMOTION TOOL ($(basename $0))\nUSAGE:\t$(basename $0) [target]\t\tWhere target is 'review' or 'production' (no single quotes)" 1>&2
+  echo "PROMOTION TOOL ($(basename $0))
+  USAGE:  $(basename $0) [target]   Where target is 'review' or 'production' (no single quotes)" 1>&2
   exit 1
 fi
 
@@ -51,8 +52,11 @@ echo "Promoting from $SOURCE to $TARGET"
 # target, from
 function checkout_and_merge() {
   git checkout -q -f "$1" || {
-    echo "RDG PROMOTE($(basename $0)): could not check out target cleanly." 1>&2
-    exit 1
+    echo "Attempting to create the $1 branch locally."
+    git checkout -b $1 origin/$1 || {
+      echo "RDG PROMOTE($(basename $0)): could not check out target cleanly. Branch does not exist. See Mike" 1>&2
+      exit 1
+    }    
   }
   git merge --no-ff "$2" -m "Promoting code to $TARGET"
 }

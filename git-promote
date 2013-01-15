@@ -58,6 +58,7 @@ function checkout_and_merge() {
       exit 1
     }    
   }
+  git pull
   git merge --no-ff "$2" -m "Promoting code to $TARGET"
 }
 

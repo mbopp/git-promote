@@ -10,6 +10,17 @@
 TARGET="$1"
 BRANCH=$(git name-rev HEAD | cut -d' ' -f2)
 
+if [ "$BRANCH" != "dev" -a "$BRANCH" != 'develop' ]; then
+  echo "You NEED to be on the development branch ('dev') to use GIT PROMOTE.
+  Try This: 
+    git checkout dev 
+  followed by a: 
+    git pull 
+  to make sure your code is up to date.
+  Standard practice for RDG developers is to always be on the dev branch of a project and let this promoter handle the other branches." 1>&2
+  exit 1
+fi
+
 # USAGE
 if [ -z "$1" ]; then
   echo "PROMOTION TOOL ($(basename $0))
@@ -23,13 +34,28 @@ if [ "$TARGET" != "review" -a "$TARGET" != "test" -a "$TARGET" != "master" -a "$
   exit 1
 fi
 
+# make sure all branches are local for our environment
 # Set appropriate SOURCE and TARGET based on what was provided as the TARGET (needed for using on other systems like GFS Canada)
+DEV_EXISTS=0
+REVIEW_EXISTS=0
+for branch in $(basename $(git for-each-ref --format='%(refname)' refs/heads/)); do
+  [ "$branch" = "dev" -o "$branch" = "develop" ] && DEV_EXISTS=1
+  [ "$branch" = "test" -o "$branch" = "review" ] && REVIEW_EXISTS=1
+done
+
+[ $DEV_EXISTS -ne 1 ] && git update-ref refs/heads/dev origin/dev > /dev/null 2>&1
+if [ $REVIEW_EXISTS -ne 1 ]; then 
+  git update-ref refs/heads/review origin/review > /dev/null 2>&1
+  git branch --set-upstream review origin/review > /dev/null 2>&1
+fi
 
 for branch in $(basename $(git for-each-ref --format='%(refname)' refs/heads/)); do
   [ "$branch" = "dev" -o "$branch" = "develop" ] && DEV="$branch"
   [ "$branch" = "test" -o "$branch" = "review" ] && REVIEW="$branch"
   [ "$branch" = "master" -o "$branch" = "production" ] && PROD="$branch"
 done
+
+
 
 case "$TARGET" in
   review|test)
@@ -44,7 +70,7 @@ case "$TARGET" in
     echo "Invalid environment $TARGET"
     exit 1
     ;;
-esac   
+esac  
 
 echo "Promoting from $SOURCE to $TARGET"
 

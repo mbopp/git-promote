@@ -43,19 +43,20 @@ for branch in $(basename $(git for-each-ref --format='%(refname)' refs/heads/));
   [ "$branch" = "test" -o "$branch" = "review" ] && REVIEW_EXISTS=1
 done
 
+echo $REVIEW_EXISTS
+
 [ $DEV_EXISTS -ne 1 ] && git update-ref refs/heads/dev origin/dev > /dev/null 2>&1
 if [ $REVIEW_EXISTS -ne 1 ]; then 
   git update-ref refs/heads/review origin/review > /dev/null 2>&1
   git branch --set-upstream review origin/review > /dev/null 2>&1
 fi
 
-for branch in $(basename $(git for-each-ref --format='%(refname)' refs/heads/)); do
+for branch in $(git for-each-ref --format='%(refname)' refs/heads/); do
+  branch=$(basename $branch)
   [ "$branch" = "dev" -o "$branch" = "develop" ] && DEV="$branch"
   [ "$branch" = "test" -o "$branch" = "review" ] && REVIEW="$branch"
   [ "$branch" = "master" -o "$branch" = "production" ] && PROD="$branch"
 done
-
-
 
 case "$TARGET" in
   review|test)
